@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; form-action 'self'">
+<meta name="description" content="A free, offline single-binary tool that tracks RC, insurance, fitness, permit, PUC, road tax and driving licence expiry for a small transport fleet, and answers whether a vehicle can legally run today.">
+<title>Fleet Document Expiry Vault · Open MSME</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="assets/theme-init.js"></script>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/accent.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <span class="brand"><span class="dot"></span> Fleet Document Expiry Vault <span class="tag">Open MSME</span></span>
+    <span class="sp"></span>
+    <a class="home" href="https://sreenivas-sadhu-prabhakara.github.io/openmsme/">All tools</a>
+    <button class="themer" type="button" data-themer>Theme</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow">Logistics &amp; warehousing · India</p>
+    <h1>Vehicle document expiry tracker for small transport fleets</h1>
+    <p class="lede">One expired document makes a vehicle illegal to run and voids its insurance, and most small fleets find out at a checkpoint. This keeps every RC, policy, fitness certificate, permit, PUC, tax receipt and driving licence in one place on your own machine, and answers the only question that matters before the vehicle leaves the yard.</p>
+    <div class="who">
+      <span class="pill">Small fleet owners and transport contractors</span>
+      <span class="pill reg">Motor Vehicles Act · CMVR</span>
+      <span class="pill">Free · open source · offline</span>
+    </div>
+  </section>
+
+  <div class="prose">
+
+    <h2>What it does</h2>
+    <p>You enter what is printed on your papers: the registration number, the policy number, the date each document runs out, and where you keep the scan. The tool does the arithmetic you would otherwise do on a wall calendar.</p>
+    <p>It gives you three things. A <strong>fleet board</strong> that lists every document across every vehicle and driver, sorted by urgency — expired first, longest overdue at the top, then the soonest to expire — with a red, amber or green light against each. A <strong>per-vehicle answer</strong>: can this vehicle run today, yes or no, and if no, exactly which documents are in the way and by how many days. And a <strong>driver licence list</strong>, because a licence belongs to the person and not to the lorry.</p>
+    <p>Reminders fire at three tiers before a document runs out: <strong>30 days</strong>, when there is still time to book a fitness slot; <strong>15 days</strong>, when the insurer can still be paid without a break in cover; and <strong>3 days</strong>, when it is a scramble. A document counts as valid through the whole of its expiry date — "valid upto 31-03-2027" includes 31 March — so the expiry day itself shows amber, and the morning after shows red.</p>
+
+    <h2>Who it's for</h2>
+    <p>The owner of two lorries or twelve. The transport contractor whose documents live in a plastic folder in the cab and whose renewal dates live in their head. Anyone who has lost a day to a detained vehicle because a PUC certificate ran out three weeks ago and nobody noticed.</p>
+    <p>It is not a fleet telematics system and it does not track where your vehicles are. It tracks paper.</p>
+
+    <h2>The rule it implements</h2>
+    <p>Under the <strong>Motor Vehicles Act, 1988</strong> and the <strong>Central Motor Vehicles Rules, 1989</strong>, a vehicle on a public road must be able to produce a valid set of documents. Four of them stop the vehicle outright when they lapse, and this tool blocks on them by default:</p>
+    <ul>
+      <li><strong>Insurance</strong> — third-party cover is compulsory under section 146 of the Act. Driving without it is an offence, and an expired policy means any claim, including a third-party claim you would otherwise be indemnified against, falls on you personally.</li>
+      <li><strong>Certificate of fitness (CF)</strong> — required for a transport vehicle under section 56. No valid CF, no legal operation.</li>
+      <li><strong>Permit</strong> — required under section 66 for a goods or passenger vehicle used for hire or reward.</li>
+      <li><strong>PUC certificate</strong> — required under rule 115 of the CMVR.</li>
+    </ul>
+    <p><strong>Registration (RC)</strong> and <strong>road tax</strong> are recorded and reported, but do not stop the vehicle by default: an expired RC or an unpaid tax demand is a penalty and a renewal job rather than a roadside immobilisation. Every one of these six is a switch you can change, because vehicle classes differ — a carriage exempt from a permit under section 66 should not be grounded by a missing one.</p>
+    <p>A <strong>driving licence</strong> is held against the driver, not the vehicle, so an expired one grounds the person and not one particular lorry.</p>
+
+    <h2>Install &amp; run</h2>
+    <p>One binary, no dependencies, no installer. With Go 1.25 or newer:</p>
+<pre><code>git clone https://github.com/sreenivas-sadhu-prabhakara/fleet-doc-expiry-vault
+cd fleet-doc-expiry-vault
+
+# run it straight away
+go run .
+
+# or build the binary once and keep it
+go build -o fleet-doc-expiry-vault .
+./fleet-doc-expiry-vault</code></pre>
+    <p>Then open <code>http://127.0.0.1:8080</code> in a browser on the same machine. Two flags, if you want them:</p>
+<pre><code>./fleet-doc-expiry-vault -addr 127.0.0.1:9000 -data /path/to/my-fleet.json</code></pre>
+    <p>It binds to the loopback address, so nothing outside your own machine can reach it. Stop it with Ctrl-C.</p>
+
+    <h2>What it stores</h2>
+    <p>One JSON file, written where <code>-data</code> points (by default <code>./fleet-doc-expiry-vault-data.json</code> beside the binary). It is plain text you can open in any editor, and it is written atomically — to a temporary file that is then renamed over the old one — so a crash or a full disk leaves your previous good file intact rather than a half-written one.</p>
+    <p>That file is the whole system. Back it up by copying it. Move it to another machine by copying it. There is no account, no database, no sync and no cloud.</p>
+    <p>A document record holds a <em>reference</em> to your scan — a path or a note like <code>scans/ka01-insurance-2027.pdf</code> — and never the file itself. Nothing is uploaded, because there is nowhere to upload it to.</p>
+    <p>The binary makes <strong>no outbound network connections of any kind</strong>. No telemetry, no analytics, no update check, no fonts or scripts fetched from anywhere. The one socket it opens is the local one it serves the interface on.</p>
+
+    <h2>Features</h2>
+    <div class="featgrid">
+      <div class="feat">
+        <h3>Can this vehicle run today?</h3>
+        <p>One vehicle, one answer, and when the answer is no, the exact list of documents in the way with the days overdue against each.</p>
+      </div>
+      <div class="feat">
+        <h3>Fleet board by urgency</h3>
+        <p>Every document across every vehicle and driver on one screen, expired first, then soonest, in red, amber and green.</p>
+      </div>
+      <div class="feat">
+        <h3>Three reminder tiers</h3>
+        <p>30, 15 and 3 days before expiry, so a renewal is noticed while there is still time to do something about it.</p>
+      </div>
+      <div class="feat">
+        <h3>Driver licence list</h3>
+        <p>Licences tracked per driver, with the renewal paperwork — including when a medical certificate is needed.</p>
+      </div>
+      <div class="feat">
+        <h3>Scan references</h3>
+        <p>Record where each certificate is kept on your own machine, so the paper can be found when it is asked for.</p>
+      </div>
+      <div class="feat">
+        <h3>Suggested expiry dates</h3>
+        <p>Type the issue date and the tool proposes the expiry from the usual validity period — clamped to month ends, and always yours to overrule.</p>
+      </div>
+      <div class="feat">
+        <h3>Printable renewal checklists</h3>
+        <p>What to take to the RTO, the testing station or the insurer for each document, as a sheet you can print and tick off.</p>
+      </div>
+      <div class="feat">
+        <h3>CSV in and out</h3>
+        <p>The whole book exports as one spreadsheet-friendly CSV and imports back, so your records are never locked inside the tool.</p>
+      </div>
+    </div>
+
+    <h2>The validity periods it assumes</h2>
+    <p>The tool can suggest an expiry date from an issue date. Those suggestions come from one table of named figures, every one of which you can change:</p>
+    <table class="breakdown">
+      <thead><tr><th>Document</th><th class="num">First issue</th><th class="num">On renewal</th></tr></thead>
+      <tbody>
+        <tr><td>PUC certificate</td><td class="num">12 months (new vehicle)</td><td class="num">6 months</td></tr>
+        <tr><td>Insurance</td><td class="num">12 months</td><td class="num">12 months</td></tr>
+        <tr><td>Certificate of fitness</td><td class="num">24 months (new transport vehicle)</td><td class="num">12 months</td></tr>
+        <tr><td>Permit</td><td class="num">60 months</td><td class="num">60 months</td></tr>
+        <tr><td>Registration, road tax, driving licence</td><td class="num">no default</td><td class="num">no default</td></tr>
+      </tbody>
+    </table>
+    <p class="assumptions">Registration, road tax and driving licence have no default because their validity depends on the vehicle class, the state and the holder's age by too much for a guess to be useful. Enter what the paper says.</p>
+
+    <div class="note">
+      <strong>These figures are indicative, and the date on your paper always wins.</strong> Statutory validity periods vary by vehicle class, by the age of the vehicle, by permit type and by state, and they change when the rules are amended. Treat every suggested date as a prompt to check the certificate, never as a substitute for reading it, and confirm the current requirement with your RTO or state transport department before you act on it. The renewal checklists are the papers a small fleet is usually asked for; the authority is the authority.
+    </div>
+
+    <div class="note">
+      <strong>There is no connection to any government system.</strong> This tool does not talk to VAHAN, Parivahan or SARATHI, and it makes no outbound network calls at all. Nothing you enter is verified against any official record. The dates in your vault are whatever you typed from your own papers, so a date typed wrongly stays wrong until you correct it. The official portals are listed inside the tool as plain text for you to copy into your own browser.
+    </div>
+
+    <h2>Licence</h2>
+    <p>MIT licensed. Use it, change it, run it for your own fleet or your customers'.</p>
+
+  </div>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Open MSME · free tools for micro and small businesses · MIT licensed</span>
+    <a href="https://sreenivas-sadhu-prabhakara.github.io/openmsme/">All tools</a>
+  </div>
+</footer>
+
+<script src="assets/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# the built binary
+/fleet-doc-expiry-vault
+/fleet-doc-expiry-vault.exe
+
+# local records — these are the owner's business documents, never commit them
+*-data.json
+*-data.json.tmp-*
+
+# editor and OS litter
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/

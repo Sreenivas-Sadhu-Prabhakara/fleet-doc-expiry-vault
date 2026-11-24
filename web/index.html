@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; form-action 'self'; connect-src 'self'">
+<meta name="robots" content="noindex, nofollow">
+<title>Fleet Document Expiry Vault · Open MSME</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="assets/theme-init.js"></script>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/accent.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <span class="brand"><span class="dot"></span> Fleet Document Expiry Vault <span class="tag">Open MSME</span></span>
+    <span class="sp"></span>
+    <span class="tag" id="data-file" title="Where your records are stored"></span>
+    <button class="themer" type="button" data-themer>Theme</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow">Logistics &amp; warehousing · India</p>
+    <h1>Vehicle document expiry tracker for small transport fleets</h1>
+    <p class="lede">One expired paper makes a vehicle illegal to run and voids the insurance. Keep every RC, policy, fitness certificate, permit, PUC, tax receipt and driving licence in one place, and get a straight answer before the vehicle leaves the yard.</p>
+    <div class="who">
+      <span class="pill">Small fleet owners and transport contractors</span>
+      <span class="pill reg">Motor Vehicles Act · CMVR</span>
+      <span class="pill">Runs on your machine</span>
+    </div>
+  </section>
+
+  <nav class="tabs seg" aria-label="Sections">
+    <button type="button" data-tab="board" aria-pressed="true">Fleet board</button>
+    <button type="button" data-tab="run" aria-pressed="false">Can it run today?</button>
+    <button type="button" data-tab="vehicles" aria-pressed="false">Vehicles</button>
+    <button type="button" data-tab="drivers" aria-pressed="false">Drivers &amp; licences</button>
+    <button type="button" data-tab="documents" aria-pressed="false">Documents</button>
+    <button type="button" data-tab="renewals" aria-pressed="false">Renewal checklists</button>
+    <button type="button" data-tab="data" aria-pressed="false">Data &amp; settings</button>
+  </nav>
+
+  <p class="flash" id="flash" role="status" aria-live="polite" hidden></p>
+
+  <!-- ───────── fleet board ───────── -->
+  <section class="card panel" id="panel-board">
+    <h2>Fleet board, sorted by urgency</h2>
+    <div class="field asof">
+      <label for="asof">As of <span class="hint">leave at today, or look ahead to check a date</span></label>
+      <div class="inp"><input type="date" id="asof"></div>
+    </div>
+    <div class="counts" id="board-counts"></div>
+    <div class="tablewrap">
+      <table class="breakdown board" id="board-table">
+        <thead>
+          <tr>
+            <th>Status</th><th>Vehicle / driver</th><th>Document</th>
+            <th>Number</th><th>Expires</th><th class="num">Days</th><th>Scan</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="empty" id="board-empty" hidden>Nothing on file yet. Add a vehicle, then add its documents.</p>
+    <p class="note">Red is expired, amber is inside a reminder tier of <span id="tier-text"></span> days, green has more time. A document counts as valid through the whole of its expiry date, so the expiry day itself still shows amber.</p>
+  </section>
+
+  <!-- ───────── can it run today ───────── -->
+  <section class="card panel" id="panel-run" hidden>
+    <h2>Can this vehicle run today?</h2>
+    <div class="field">
+      <label for="run-vehicle">Vehicle</label>
+      <select id="run-vehicle"></select>
+    </div>
+    <div id="run-answer"></div>
+    <p class="empty" id="run-empty" hidden>Add a vehicle first.</p>
+  </section>
+
+  <!-- ───────── vehicles ───────── -->
+  <section class="card panel" id="panel-vehicles" hidden>
+    <h2>Vehicles</h2>
+    <form id="vehicle-form" autocomplete="off">
+      <div class="row2">
+        <div class="field">
+          <label for="v-regno">Registration number</label>
+          <div class="inp"><input type="text" id="v-regno" required placeholder="KA 01 AB 1234"></div>
+        </div>
+        <div class="field">
+          <label for="v-type">Type</label>
+          <select id="v-type">
+            <option value="goods">Goods carriage</option>
+            <option value="passenger">Passenger vehicle</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="v-make">Make and model <span class="hint">optional</span></label>
+          <div class="inp"><input type="text" id="v-make" placeholder="Tata 407"></div>
+        </div>
+        <div class="field">
+          <label for="v-owner">Registered owner <span class="hint">optional</span></label>
+          <div class="inp"><input type="text" id="v-owner" placeholder="As printed on the RC"></div>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" type="submit">Save vehicle</button>
+        <button class="btn ghost" type="reset">Clear</button>
+      </div>
+      <p class="note">Saving a registration number that is already on file updates that vehicle.</p>
+    </form>
+    <div id="vehicle-list"></div>
+  </section>
+
+  <!-- ───────── drivers ───────── -->
+  <section class="card panel" id="panel-drivers" hidden>
+    <h2>Drivers and licence expiry</h2>
+    <form id="driver-form" autocomplete="off">
+      <div class="row2">
+        <div class="field">
+          <label for="d-name">Driver name</label>
+          <div class="inp"><input type="text" id="d-name" required></div>
+        </div>
+        <div class="field">
+          <label for="d-phone">Phone <span class="hint">optional</span></label>
+          <div class="inp"><input type="text" id="d-phone" inputmode="tel"></div>
+        </div>
+      </div>
+      <input type="hidden" id="d-id">
+      <div class="btnrow">
+        <button class="btn primary" type="submit">Save driver</button>
+        <button class="btn ghost" type="reset">Clear</button>
+      </div>
+    </form>
+    <h3 class="sub">Licence expiry list</h3>
+    <div class="tablewrap">
+      <table class="breakdown board" id="licence-table">
+        <thead>
+          <tr><th>Status</th><th>Driver</th><th>Phone</th><th>Licence number</th><th>Expires</th><th class="num">Days</th><th>Scan</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="empty" id="licence-empty" hidden>No driving licences on file yet. Add a driver, then record their licence under Documents.</p>
+    <div id="driver-list"></div>
+    <p class="note">A driving licence belongs to the person, not to a vehicle, so an expired one grounds the driver and not one particular lorry. A transport licence and a driver aged 40 or above need a medical certificate at renewal.</p>
+  </section>
+
+  <!-- ───────── documents ───────── -->
+  <section class="card panel" id="panel-documents" hidden>
+    <h2>Add or update a document</h2>
+    <form id="document-form" autocomplete="off">
+      <div class="row2">
+        <div class="field">
+          <label for="doc-kind">Document</label>
+          <select id="doc-kind"></select>
+        </div>
+        <div class="field">
+          <label for="doc-subject">Belongs to</label>
+          <select id="doc-subject"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="doc-number">Document number <span class="hint">policy number, certificate number, permit number</span></label>
+        <div class="inp"><input type="text" id="doc-number"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="doc-issued">Issued on <span class="hint">optional</span></label>
+          <div class="inp"><input type="date" id="doc-issued"></div>
+        </div>
+        <div class="field">
+          <label for="doc-expires">Valid until <span class="hint">as printed on the paper</span></label>
+          <div class="inp"><input type="date" id="doc-expires" required></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="doc-first"><input type="checkbox" id="doc-first" aria-label="This is the first certificate for a new vehicle"> This is the first certificate for a new vehicle</label>
+      </div>
+      <div class="btnrow">
+        <button class="btn ghost" type="button" id="doc-suggest">Suggest the expiry date</button>
+      </div>
+      <p class="note" id="doc-validity-note"></p>
+      <div class="field">
+        <label for="doc-fileref">Where the scan is kept <span class="hint">a path or a note on your own machine; no file is uploaded</span></label>
+        <div class="inp"><input type="text" id="doc-fileref" placeholder="scans/ka01-insurance-2027.pdf"></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" type="submit">Save document</button>
+        <button class="btn ghost" type="reset">Clear</button>
+      </div>
+      <p class="note">One current document of each kind is kept per vehicle or driver. Recording a renewal replaces the one it renews.</p>
+    </form>
+    <p class="empty" id="document-empty" hidden>Add a vehicle or a driver first — a document has to belong to something.</p>
+  </section>
+
+  <!-- ───────── renewal checklists ───────── -->
+  <section class="card panel" id="panel-renewals" hidden>
+    <h2>Renewal checklists</h2>
+    <div class="field">
+      <label for="checklist-kind">Show the checklist for</label>
+      <select id="checklist-kind">
+        <option value="">Every document (one printable sheet)</option>
+      </select>
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" type="button" id="checklist-print">Print this sheet</button>
+    </div>
+    <div id="checklist-body"></div>
+  </section>
+
+  <!-- ───────── data and settings ───────── -->
+  <section class="card panel" id="panel-data" hidden>
+    <h2>Data and settings</h2>
+
+    <h3 class="sub">Which expired documents stop a vehicle</h3>
+    <p class="hint">By default an expired insurance policy, certificate of fitness, permit or PUC certificate stops the vehicle, because running on any of them is an offence and voids the cover. Registration and road tax are reported but do not stop it. Change either if your vehicle class is treated differently — a permit-exempt carriage, for instance.</p>
+    <div id="policy-blocking"></div>
+
+    <h3 class="sub">Indicative validity periods</h3>
+    <p class="hint">Used only to suggest an expiry date from an issue date. The figure on your paper always wins. Set a period to 0 to stop the vault suggesting a date for that document.</p>
+    <div class="tablewrap">
+      <table class="breakdown" id="policy-validity">
+        <thead><tr><th>Document</th><th class="num">First issue</th><th class="num">On renewal</th><th>Basis</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" type="button" id="policy-save">Save settings</button>
+      <button class="btn ghost" type="button" id="policy-reset">Back to the defaults</button>
+    </div>
+
+    <h3 class="sub">Export and import</h3>
+    <p class="hint">One CSV holds the whole book: vehicles, drivers and documents. Open it in any spreadsheet, and bring it back in when you are done.</p>
+    <div class="btnrow">
+      <a class="btn ghost" id="export-link" href="api/export.csv" download="fleet-documents.csv">Download the CSV</a>
+    </div>
+    <div class="field">
+      <label for="import-file">Import a CSV</label>
+      <input type="file" id="import-file" accept=".csv,text/csv">
+    </div>
+    <div class="field">
+      <label for="import-mode">How to import</label>
+      <select id="import-mode">
+        <option value="merge">Merge into what is already here</option>
+        <option value="replace">Replace everything</option>
+      </select>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" type="button" id="import-run">Import</button>
+    </div>
+    <div id="import-report"></div>
+
+    <h3 class="sub">Where your data lives</h3>
+    <p class="hint">Everything is in one JSON file. Back it up by copying that file. Nothing is uploaded and nothing is sent anywhere.</p>
+    <pre id="data-file-full"></pre>
+
+    <h3 class="sub">Official portals</h3>
+    <p class="hint">This tool has no connection to any government system and never contacts one. The addresses below are plain text so you can copy them into your own browser when you need them.</p>
+    <pre>Parivahan Sewa (Ministry of Road Transport and Highways)
+  https://parivahan.gov.in
+
+VAHAN — vehicle registration services
+  https://vahan.parivahan.gov.in
+
+SARATHI — driving licence services
+  https://sarathi.parivahan.gov.in</pre>
+    <p class="note">Nothing you type here is checked against VAHAN, Parivahan or SARATHI. The records in this vault are whatever you entered from your own papers, so a date typed wrongly stays wrong until you correct it.</p>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Open MSME · free tools for small businesses · MIT licensed</span>
+    <span>No network access. No accounts. Your records stay on this machine.</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
